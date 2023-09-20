@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  - pull_request
+  - push
+
+jobs:
+  mypy:
+    name: mypy
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Run tests
+        run: pip install python-dateutil && tox -e mypy
+
+  tests:
+    name: Python ${{ matrix.implementation }}${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version:
+          - '3.7'
+          - '3.8'
+          - '3.9'
+          - '3.10'
+          - '3.11'
+        implementation:
+          - ''      # CPython
+          - 'pypy'  # PyPy
+        exclude:    # unreleased;
+          - implementation: 'pypy'
+            python-version: '3.10'
+          - implementation: 'pypy'
+            python-version: '3.11'
+
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Set up Python ${{ matrix.implementation }}${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.implementation }}${{ matrix.python-version }}
+
+      - name: Install tox
+        run: pip install tox
+
+      - name: Run tests
+        run: pip install backtrader && tox -e py
